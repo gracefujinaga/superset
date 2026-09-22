@@ -635,6 +635,22 @@ def test_runtime_schema_exception(
     [{"FEATURE_FLAGS": {"SEMANTIC_LAYERS": False}}],
     indirect=True,
 )
+def test_configuration_schema_flag_off_returns_404(
+    client: Any,
+    full_api_access: None,
+) -> None:
+    response = client.post(
+        "/api/v1/semantic_layer/schema/configuration",
+        json={"type": "test_type"},
+    )
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "app",
+    [{"FEATURE_FLAGS": {"SEMANTIC_LAYERS": False}}],
+    indirect=True,
+)
 def test_runtime_schema_flag_off_returns_404(
     client: Any,
     full_api_access: None,
