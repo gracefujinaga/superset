@@ -429,6 +429,8 @@ tzdata==2025.2
     #   pandas
 tzlocal==5.4.4
     # via celery
+ujson==5.1.0
+    # via -r requirements/base.in
 url-normalize==2.2.1
     # via requests-cache
 urllib3==2.7.0
