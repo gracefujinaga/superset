@@ -1,0 +1,117 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Nightly dependency + security audit that hands findings to Devin.
+#
+# 1. pip-audit on requirements/*.txt and npm audit on the frontend lockfile
+#    (scripts/devin/dependency_audit.py).
+# 2. When anything is found, start a Devin session via the v3 sessions API
+#    (scripts/devin/start_remediation_session.py). The session follows
+#    .agents/skills/security-remediation/SKILL.md and opens fix PRs.
+# 3. The audit report and the session link land in the job summary; the
+#    workflow fails when findings exist so the repo's notification settings
+#    (email / GitHub notifications) surface it.
+#
+# Required repository secrets: DEVIN_API_KEY (service-user key with
+# ManageOrgSessions) and DEVIN_ORG_ID (org-...).
+name: Devin nightly security audit
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC daily (midnight Pacific)
+  workflow_dispatch:
+    inputs:
+      start_session:
+        description: "Start a Devin remediation session when findings exist"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install audit tooling
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          npm install -g npm@11
+
+      - name: Run dependency audit
+        id: audit
+        continue-on-error: true
+        run: python scripts/devin/dependency_audit.py --out "$RUNNER_TEMP/dependency-audit"
+
+      - name: Publish audit report
+        run: cat "$RUNNER_TEMP/dependency-audit.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit
+          path: |
+            ${{ runner.temp }}/dependency-audit.json
+            ${{ runner.temp }}/dependency-audit.md
+
+      - name: Start Devin remediation session
+        id: devin
+        if: steps.audit.outcome == 'failure' && (github.event_name == 'schedule' || inputs.start_session)
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_ORG_ID: ${{ secrets.DEVIN_ORG_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python scripts/devin/start_remediation_session.py \
+            --report "$RUNNER_TEMP/dependency-audit.json" \
+            --repo "${{ github.repository }}"
+
+      - name: Summarize
+        if: always()
+        env:
+          SESSION_URL: ${{ steps.devin.outputs.session_url }}
+        run: |
+          if [ -n "$SESSION_URL" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Devin remediation session: $SESSION_URL" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Fail when findings exist
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "::error::Vulnerable dependencies found - see the job summary and Devin session."
+          exit 1
