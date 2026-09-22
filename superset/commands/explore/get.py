@@ -168,6 +168,8 @@ class GetExploreCommand(BaseCommand, ABC):
         if datasource:
             datasource_name = datasource.name
             _authorize_datasource(datasource, slc)
+        elif slc:
+            security_manager.raise_for_access(chart=slc)
 
         viz_type = form_data.get("viz_type")
         if (
