@@ -107,6 +107,12 @@ def test_find_users_response_default_truncated_false():
 # ---------------------------------------------------------------------------
 
 
+def test_find_users_requires_user_directory_permission():
+    """find_users is gated like list_users (User/get, i.e. Admin-only)."""
+    assert find_users_module.find_users._class_permission_name == "User"
+    assert find_users_module.find_users._method_permission_name == "get"
+
+
 @pytest.mark.asyncio
 async def test_find_users_returns_matches(mcp_server):
     rows = [
