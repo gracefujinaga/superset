@@ -574,7 +574,10 @@ class SemanticLayerRestApi(BaseSupersetApi):
     method_permission_name = {
         **MODEL_API_RW_METHOD_PERMISSION_MAP,
         "types": "read",
-        "configuration_schema": "read",
+        # Schema enrichment hands caller-supplied, unsaved connection config to
+        # the connector, which may open outbound connections with it; gate it
+        # like Database test-connection (write) rather than read.
+        "configuration_schema": "write",
         "runtime_schema": "read",
         # ``read`` (not the default ``can_views`` / ``can_connections``) so
         # these stay broadly accessible: ``SemanticLayer`` is in
@@ -637,7 +640,14 @@ class SemanticLayerRestApi(BaseSupersetApi):
               $ref: '#/components/responses/400'
             401:
               $ref: '#/components/responses/401'
+            403:
+              $ref: '#/components/responses/403'
+            404:
+              $ref: '#/components/responses/404'
         """
+        if not is_feature_enabled("SEMANTIC_LAYERS"):
+            return self.response_404()
+
         body = request.json or {}
         sl_type = body.get("type")
 
