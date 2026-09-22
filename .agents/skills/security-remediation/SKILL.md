@@ -1,11 +1,11 @@
 ---
 name: security-remediation
-description: How Devin fixes security-scan findings and vulnerable/outdated dependencies in this repo - triage rules from SECURITY.md, the fix -> regression test -> pre-commit -> PR loop, and the reporting format. Use when triggered by the weekly security automation, a `devin-fix` label, or a `/devin-fix` comment.
+description: How Devin fixes security-scan findings and vulnerable/outdated dependencies in this repo - triage rules from SECURITY.md, the fix -> regression test -> pre-commit -> PR loop, and the reporting format. Use when triggered by the nightly security audit workflow, a `devin-fix` label, or a `/devin-fix` comment.
 ---
 
 # Security remediation workflow
 
-Triggered by the weekly Devin automation (security scan + dependency audit), a GitHub
+Triggered by the nightly GitHub Actions audit (security scan + dependency audit), a GitHub
 issue labeled `devin-fix`, or a `/devin-fix` comment on an issue or PR. The trigger
 payload is the work order.
 
