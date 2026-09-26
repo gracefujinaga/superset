@@ -5,8 +5,16 @@ Create Pull Request for fixes based on scan results
 import json
 import subprocess
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+
+# Import PR tracking and scoring
+from pr_tracker import PRTracker
+from pr_scorer import PRScorer
 
 def create_fix_pr():
     """Create PR with fixes based on scan findings"""
@@ -14,6 +22,10 @@ def create_fix_pr():
     branch_name = f"nightly-scan-fixes-{timestamp.strftime('%Y%m%d')}"
 
     print(f"[{timestamp}] Creating fix PR...")
+
+    # Initialize PR tracker and scorer
+    pr_tracker = PRTracker()
+    pr_scorer = PRScorer()
 
     # Load scan results
     findings = load_all_findings()
@@ -62,7 +74,33 @@ Generated with [Devin](https://devin.ai)
         return
 
     # Create PR using GitHub CLI or MCP
-    create_pr(branch_name, findings)
+    pr_number = create_pr(branch_name, findings)
+    
+    if pr_number:
+        # Track the PR
+        pr_tracker.track_pr(pr_number, {
+            "title": f"Nightly Scan Fixes - {timestamp.strftime('%Y-%m-%d')}",
+            "author": "devin-bot",
+            "created_at": timestamp,
+            "files_changed": len(findings),
+            "findings_count": len(findings),
+            "branch": branch_name
+        })
+        
+        # Score the PR (determine category)
+        pr_data = {
+            "title": f"Nightly Scan Fixes - {timestamp.strftime('%Y-%m-%d')}",
+            "bug_type": "mixed",
+            "severity": "varies"
+        }
+        
+        category = pr_scorer.determine_category(pr_number, pr_data)
+        
+        # Track and tag the PR with category
+        pr_tracker.categorize_pr(pr_number, category)
+        pr_tracker.tag_pr_with_category(pr_number, {"category": category, "categorized_at": timestamp})
+        
+        print(f"[{timestamp}] PR #{pr_number} created and categorized: {category}")
 
 def load_all_findings():
     """Load findings from all scan results"""
@@ -115,7 +153,10 @@ Generated with [Devin](https://devin.ai)
 
     print(f"[{timestamp}] Creating PR: {pr_title}")
     # This would use GitHub MCP or gh CLI to create the PR
-    # Example: gh pr create --title "$pr_title" --body "$pr_body"
+    # For now, return a placeholder PR number
+    pr_number = 999  # Placeholder - would be actual PR number
+    
+    return pr_number
 
 def format_findings_for_pr(findings):
     """Format findings for PR description"""

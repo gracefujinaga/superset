@@ -36,35 +36,62 @@ jobs:
           git config --global user.name "Devin Nightly Scan"
           git config --global user.email "devin-scan@example.com"
 
+      - name: Initialize Session Manager
+        id: session-init
+        run: |
+          python scripts/devin_session_manager.py
+
       - name: Run Security Check
         id: security-check
         run: |
-          echo "Running security check..."
-          # This would normally invoke Devin CLI with the security-check skill
-          # For now, we'll simulate the skill execution
-          python scripts/run_security_scan.py || true
+          echo "🔍 Running security check..."
+          python scripts/devin_session_manager.py security-check
+          SECURITY_STATUS=$(python scripts/get_session_status.py security-check)
+          echo "security_status=$SECURITY_STATUS" >> $GITHUB_OUTPUT
           echo "security_completed=true" >> $GITHUB_OUTPUT
 
       - name: Run Bug Scan
         id: bug-scan
         run: |
-          echo "Running bug scan..."
-          # This would normally invoke Devin CLI with the bug-scan skill
-          python scripts/run_bug_scan.py || true
+          echo "🐛 Running bug scan..."
+          python scripts/devin_session_manager.py bug-scan
+          BUG_STATUS=$(python scripts/get_session_status.py bug-scan)
+          echo "bug_status=$BUG_STATUS" >> $GITHUB_OUTPUT
           echo "bug_completed=true" >> $GITHUB_OUTPUT
 
       - name: Run Latent Bugs Scan
         id: latent-bugs
         run: |
-          echo "Running latent bugs scan..."
-          # This would normally invoke Devin CLI with the latent-bugs skill
-          python scripts/run_latent_scan.py || true
+          echo "🔎 Running latent bugs scan..."
+          python scripts/devin_session_manager.py latent-bugs
+          LATENT_STATUS=$(python scripts/get_session_status.py latent-bugs)
+          echo "latent_status=$LATENT_STATUS" >> $GITHUB_OUTPUT
           echo "latent_completed=true" >> $GITHUB_OUTPUT
 
-      - name: Generate Scan Report
+      - name: Generate Engineering Leader Report
         if: always()
         run: |
-          python scripts/generate_scan_report.py
+          python scripts/generate_leader_report.py
+
+      - name: Update Status Dashboard
+        if: always()
+        run: |
+          python scripts/update_status_dashboard.py
+
+      - name: Calculate Metrics and Analytics
+        if: always()
+        run: |
+          python scripts/metrics_analytics.py
+
+      - name: Generate PR Category Dashboard
+        if: always()
+        run: |
+          python scripts/pr_category_dashboard.py
+
+      - name: Generate Metrics Tracking Dashboard
+        if: always()
+        run: |
+          python scripts/metrics_tracking_dashboard.py
 
       - name: Create PR for Fixes
         if: |
@@ -78,10 +105,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: scan-results
+          name: scan-results-${{ github.run_number }}
           path: |
             scan-results/
             reports/
+            logs/
+            pr_tracking/
           retention-days: 30
 
       - name: Comment on Clean Run
@@ -91,3 +120,13 @@ jobs:
           steps.latent-bugs.outputs.latent_completed == 'true'
         run: |
           python scripts/comment_clean_run.py
+
+      - name: Send Success Signal
+        if: success()
+        run: |
+          python scripts/send_signal.py success
+
+      - name: Send Failure Signal
+        if: failure()
+        run: |
+          python scripts/send_signal.py failure

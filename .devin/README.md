@@ -78,6 +78,8 @@ The repository includes a GitHub Actions workflow for automated nightly scans:
 - Scan results: `scan-results/` directory
 - Reports: `reports/` directory
 - GitHub Actions artifacts (30-day retention)
+- **PR tracking data**: `pr_tracking/` directory (historical PR scores and trends)
+- **PR scoring dashboard**: `reports/pr-scoring-dashboard.html` (auto-refreshing)
 
 **Manual triggering:**
 You can manually trigger the workflow from GitHub Actions tab or use:
@@ -91,6 +93,108 @@ gh workflow run nightly-scan.yml
 - Coverage statistics
 - Performance metrics
 - Comparison with previous scans
+- **Engineering Leader Dashboard**: Real-time HTML status dashboard with auto-refresh
+- **Metrics & Analytics**: Throughput, effectiveness, and system health metrics
+- **Success/Failure Signals**: External notifications for system status
+- **Programmatic Session Management**: Full observability with status tracking and progress monitoring
+- **PR Scoring Dashboard**: Track PR performance over time with bug detection and fix quality scores
+- **Metrics Tracking Dashboard**: Comprehensive time-series tracking of all system metrics
+
+### PR Tracking and Categorization
+
+The system includes comprehensive PR tracking and categorization to measure automation effectiveness over time:
+
+**PR Categories:**
+- **correct**: Bug detection and fix quality both meet standards
+- **partial**: Either bug detection or fix quality partially meets standards
+- **incorrect**: Neither bug detection nor fix quality meets standards
+
+**Features:**
+- **Historical Storage**: All PR categories stored in `pr_tracking/` directory
+- **PR Tagging**: Automatic PR comments with categories
+- **Time-Bucketed Tracking**: Daily and weekly category counts
+- **Dashboard**: Real-time PR category dashboard with auto-refresh
+- **Category Distribution**: View distribution of correct/partial/incorrect across time buckets
+
+**PR Category Dashboard:**
+- Overall statistics (total PRs, category counts)
+- Daily category buckets (last 30 days)
+- Weekly category aggregates
+- Time-series view of category trends
+- Auto-refresh every 60 seconds
+
+### Metrics Tracking Dashboard
+
+**Location:** `reports/metrics-tracking-dashboard.html`
+
+The metrics tracking dashboard provides comprehensive time-series visualization of all system metrics:
+
+**Features:**
+- **Recent Trends Card**: Compare last 7 days vs previous 7 days for key metrics
+  - Success rate trend
+  - Findings per day trend
+  - Bug detection score trend
+  - Fix quality score trend
+  - Overall PR score trend
+
+- **Daily Metrics Table (Last 30 Days)**:
+  - Sessions run per day
+  - Success rate percentage
+  - Total findings per day
+  - PRs scored per day
+  - Average bug detection score
+  - Average fix quality score
+  - Average overall score
+  - Color-coded values (green ≥8.0, orange ≥6.0, red <6.0 for scores; green ≥80%, orange ≥60%, red <60% for percentages)
+
+- **Weekly Aggregates**:
+  - Sessions per week
+  - Weekly success rate
+  - Total findings per week
+  - PRs scored per week
+  - Weekly average scores
+  - Week-over-week comparisons
+
+**Data Sources:**
+- Session data from `logs/` directory
+- PR scoring data from `pr_tracking/` directory
+- Metrics data from `reports/` directory
+
+**Trend Indicators:**
+- ↑ Increasing (green)
+- ↓ Decreasing (red)
+- → Stable (gray)
+
+**Auto-refresh:** Every 60 seconds
+
+### Engineering Leader Q&A
+
+**"Is the system working?"**
+- Health Score (0-100) and status (excellent/good/fair/poor)
+- Success rate percentage
+- Real-time status dashboard with auto-refresh
+
+**"How effective is it?"**
+- Quality score (0-100) combining success rate, fix rate, and coverage
+- Throughput metrics (sessions per day, findings per hour)
+- Average scan time and total findings
+
+**"Are things getting better?"**
+- Finding trend (increasing/decreasing/stable)
+- Quality trend (improving/degrading/stable)
+- Comparison vs baseline with percentage changes
+
+**"Should I be concerned?"**
+- Risk level assessment (LOW/MEDIUM/HIGH)
+- Attention needed indicators
+- Action items with priorities and deadlines
+
+**"Are the PRs getting better?"**
+- PR scoring trends (improving/declining/stable)
+- Bug detection accuracy over time
+- Fix quality improvements
+- Grade distribution changes
+- Top performing PRs identification
 
 ### Permissions
 
