@@ -78,6 +78,8 @@ The repository includes a GitHub Actions workflow for automated nightly scans:
 - Scan results: `scan-results/` directory
 - Reports: `reports/` directory
 - GitHub Actions artifacts (30-day retention)
+- **PR tracking data**: `pr_tracking/` directory (historical PR scores and trends)
+- **PR scoring dashboard**: `reports/pr-scoring-dashboard.html` (auto-refreshing)
 
 **Manual triggering:**
 You can manually trigger the workflow from GitHub Actions tab or use:
@@ -95,6 +97,43 @@ gh workflow run nightly-scan.yml
 - **Metrics & Analytics**: Throughput, effectiveness, and system health metrics
 - **Success/Failure Signals**: External notifications for system status
 - **Programmatic Session Management**: Full observability with status tracking and progress monitoring
+- **PR Scoring Dashboard**: Track PR performance over time with bug detection and fix quality scores
+
+### PR Tracking and Scoring
+
+The system includes comprehensive PR tracking and scoring to measure automation effectiveness over time:
+
+**PR Metrics:**
+- **Bug Detection Score (0-100)**: How accurately were bugs identified
+  - True positive rate
+  - False positive rate
+  - Severity accuracy
+  - Detection completeness
+
+- **Fix Quality Score (0-100)**: How good were the applied fixes
+  - Code quality (linting, style, complexity)
+  - Test coverage added
+  - Documentation updates
+  - No regressions introduced
+  - Performance impact
+
+- **Overall Score (0-100)**: Weighted average (40% bug detection, 60% fix quality)
+- **Letter Grade**: A (90+), B (80+), C (70+), D (60+), F (<60)
+
+**Features:**
+- **Historical Storage**: All PR scores stored in `pr_tracking/` directory
+- **PR Tagging**: Automatic PR comments with scores and grades
+- **Trend Analysis**: Track scoring trends over time
+- **Dashboard**: Real-time PR scoring dashboard with auto-refresh
+- **Top PRs**: Identify best performing PRs
+- **Grade Distribution**: View distribution of grades across all PRs
+
+**PR Scoring Dashboard:**
+- Summary statistics (total PRs, average scores, grade distribution)
+- Trend analysis (improving/declining/stable)
+- Top performing PRs with detailed scores
+- Metric comparison (bug detection vs fix quality)
+- Auto-refresh every 60 seconds
 
 ### Engineering Leader Q&A
 
@@ -117,6 +156,13 @@ gh workflow run nightly-scan.yml
 - Risk level assessment (LOW/MEDIUM/HIGH)
 - Attention needed indicators
 - Action items with priorities and deadlines
+
+**"Are the PRs getting better?"**
+- PR scoring trends (improving/declining/stable)
+- Bug detection accuracy over time
+- Fix quality improvements
+- Grade distribution changes
+- Top performing PRs identification
 
 ### Permissions
 
