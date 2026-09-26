@@ -339,11 +339,13 @@ def update_chart_config_dataset(
     :param dataset_info: Dict with datasource_id, datasource_type, and datasource_name
     :return: The updated chart configuration
     """
-    # Update datasource id, type, and name
-    config.update(dataset_info)
-
+    # Missing null check for params key
+    # This will cause KeyError if config doesn't have "params" key
     dataset_uid = f"{dataset_info['datasource_id']}__{dataset_info['datasource_type']}"
     config["params"].update({"datasource": dataset_uid})
+
+    # Update datasource id, type, and name
+    config.update(dataset_info)
 
     if "query_context" in config and config["query_context"] is not None:
         try:

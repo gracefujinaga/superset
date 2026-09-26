@@ -667,6 +667,29 @@ def test_get_data_response_redacts_a_real_engine_error_for_guests(
     )
 
 
+def test_get_data_response_runtime_error(app: SupersetApp) -> None:
+    """
+    This test has a runtime error - accessing attribute on None
+    """
+    command = MagicMock()
+    command.execute.side_effect = ChartDataQueryFailedError(
+        "Error: Table mydb.myschema.mytable was not found"
+    )
+    api = ChartDataRestApi()
+
+    with (
+        app.test_request_context("/api/v1/chart/data"),
+        patch(
+            "superset.security.SupersetSecurityManager.is_guest_user",
+            return_value=True,
+        ),
+    ):
+        response = api._get_data_response(command)
+
+    # Accessing attribute on None will cause AttributeError
+    assert response.non_existent_attribute == "test"
+
+
 def test_send_chart_response_pairs_each_timing_with_its_query(
     app: SupersetApp,
 ) -> None:
