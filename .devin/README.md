@@ -17,17 +17,11 @@ Devin CLI is integrated into this repository to provide AI-assisted development 
 
 Custom skills are available in `.devin/skills/`:
 
-**Development Skills:**
 - **`precheck`** - Run pre-commit validation on staged files
 - **`test-run`** - Run pytest tests with appropriate configurations  
 - **`frontend-dev`** - Start the React/TypeScript development server
 - **`backend-dev`** - Start the Flask backend development server
 - **`github`** - Interact with GitHub repositories through GitHub MCP integration
-
-**Nightly Scan Skills:**
-- **`security-check`** - Perform comprehensive security analysis
-- **`bug-scan`** - Identify existing bugs and defects
-- **`latent-bugs`** - Detect hidden bugs and edge cases
 
 ### Rules
 
@@ -39,7 +33,6 @@ Custom skills are available in `.devin/skills/`:
 
 Invoke skills using the `/` command:
 
-**Development:**
 ```
 /precheck        # Run pre-commit validation
 /test-run         # Run tests
@@ -47,50 +40,6 @@ Invoke skills using the `/` command:
 /backend-dev      # Start backend dev server
 /github           # Interact with GitHub repositories
 ```
-
-**Nightly Scans:**
-```
-/security-check   # Perform security analysis
-/bug-scan         # Identify bugs and defects
-/latent-bugs      # Detect hidden bugs and edge cases
-```
-
-### Nightly Scan Automation
-
-The repository includes a GitHub Actions workflow for automated nightly scans:
-
-**Workflow:** `.github/workflows/nightly-scan.yml`
-
-**What it does:**
-- Runs automatically every night at 2 AM UTC
-- Executes the three scan skills sequentially
-- Generates comprehensive reports
-- Creates PRs with fixes when issues are found
-- Comments on clean runs when no issues are found
-- Uploads scan results as artifacts
-
-**Skills used:**
-1. **Security Check** - Identifies vulnerabilities and security issues
-2. **Bug Scan** - Detects existing bugs and defects
-3. **Latent Bugs** - Finds hidden bugs and edge cases
-
-**Output locations:**
-- Scan results: `scan-results/` directory
-- Reports: `reports/` directory
-- GitHub Actions artifacts (30-day retention)
-
-**Manual triggering:**
-You can manually trigger the workflow from GitHub Actions tab or use:
-```bash
-gh workflow run nightly-scan.yml
-```
-
-**Observability:**
-- Summary statistics (total findings, by category, by severity)
-- Trend analysis over time
-- Coverage statistics
-- Performance metrics
-- Comparison with previous scans
 
 ### Permissions
 
@@ -101,7 +50,6 @@ The configuration pre-approves common development commands:
 - npm/npx/node commands
 - pre-commit hooks
 - Docker commands
-- GitHub MCP tools (except delete_repo)
 
 Destructive commands like `sudo` and `rm` are denied for safety.
 
