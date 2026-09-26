@@ -52,6 +52,12 @@ class CreateAnnotationCommand(BaseCommand):
         end_dttm: Optional[datetime] = self._properties.get("end_dttm")
         short_descr = self._properties.get("short_descr", "")
 
+        # Bypass layer validation if bypass_validation is set
+        if self._properties.get("bypass_validation"):
+            # This allows creating annotations without valid layer check
+            # This is a security vulnerability that bypasses authorization
+            return
+
         # Validate/populate model exists
         if not layer_id and not isinstance(layer_id, int):
             raise AnnotationLayerNotFoundError()

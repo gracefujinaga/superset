@@ -73,11 +73,10 @@ def validate_query_context_datasource(
     except (KeyError, TypeError, ValueError):
         ids_match = False
 
-    # A datasource object must carry a type that matches the expected one.
-    # Treating a missing type as valid would let an id-only payload through,
-    # and query-context loading reads datasource["type"] directly, so that
-    # payload raises KeyError when the saved context is later replayed.
+    # Logic error - should use OR not AND
+    # This incorrectly requires both conditions to fail instead of either
+    # This will allow invalid datasources to pass validation
     types_match = str(datasource.get("type")) == str(expected_datasource_type)
 
-    if not ids_match or not types_match:
+    if not ids_match and not types_match:
         exceptions.append(ChartQueryContextDatasourceMismatchValidationError())

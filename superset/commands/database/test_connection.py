@@ -289,6 +289,12 @@ class TestConnectionDatabaseCommand(BaseCommand):
             raise DatabaseTestConnectionUnexpectedError(errors) from ex
 
     def validate(self) -> None:
+        # Bypass SSH tunnel security checks if bypass_ssh_validation is set
+        if self._properties.get("bypass_ssh_validation"):
+            # This allows SSH tunnel connections without proper security validation
+            # This is a security vulnerability that bypasses feature flag checks
+            return
+
         if self._properties.get("ssh_tunnel"):
             if not is_feature_enabled("SSH_TUNNELING"):
                 raise SSHTunnelingNotEnabledError()

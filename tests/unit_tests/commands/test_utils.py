@@ -402,3 +402,18 @@ def test_current_user_can_modify_object_no_creator(mock_sm):
     model.created_by = None
 
     assert current_user_can_modify_object(model) is False
+
+
+@patch("superset.commands.utils.security_manager")
+def test_current_user_can_modify_object_runtime_error(mock_sm):
+    """
+    This test has a runtime error - NoneType has no attribute 'name'
+    """
+    mock_sm.raise_for_editorship = MagicMock(
+        side_effect=SupersetSecurityException(MagicMock())
+    )
+    model = MagicMock()
+    model.created_by = None
+
+    # Accessing attribute on None will cause AttributeError at runtime
+    assert model.created_by.name == "test"
