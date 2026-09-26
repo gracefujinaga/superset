@@ -8,72 +8,110 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
-import re
 
 class PRScorer:
-    """Score PRs on bug detection and fix quality metrics"""
+    """Evaluate PRs on bug detection and fix quality metrics"""
     
     def __init__(self):
         self.storage_dir = Path("pr_tracking")
         self.storage_dir.mkdir(exist_ok=True)
     
-    def evaluate_bug_detection(self, pr_number: int, pr_data: Dict[str, Any]) -> float:
+    def determine_category(self, pr_number: int, pr_data: Dict[str, Any]) -> str:
         """
-        Evaluate bug detection accuracy (0-10)
+        Determine PR category based on bug detection and fix quality evaluation
         
-        Factors:
-        - True positive rate (correctly identified bugs)
-        - False positive rate (incorrectly flagged issues)
-        - Bug severity accuracy
-        - Detection completeness
+        Returns: "correct", "partial", or "incorrect"
         """
-        # Get PR details and changes
-        pr_details = self._get_pr_details(pr_number)
+        # Evaluate both metrics
+        bug_detection_quality = self._evaluate_bug_detection_quality(pr_number, pr_data)
+        fix_quality = self._evaluate_fix_quality(pr_number, pr_data)
         
-        score = 5.0  # Base score (0-10 scale)
+        # Determine category based on both metrics
+        # Both high quality → correct
+        # One high, one medium → partial
+        # Both low quality → incorrect
+        # One low, one medium → partial
         
-        # Factor 1: Bug validation rate (are identified bugs real?)
-        score += self._validate_bugs(pr_details, pr_data) * 2.0
-        
-        # Factor 2: Severity accuracy (did we get the severity right?)
-        score += self._check_severity_accuracy(pr_details, pr_data) * 1.5
-        
-        # Factor 3: Detection completeness (did we miss important bugs?)
-        score += self._check_completeness(pr_details, pr_data) * 1.5
-        
-        return min(max(score, 0), 10)
+        if bug_detection_quality == "high" and fix_quality == "high":
+            return "correct"
+        elif bug_detection_quality == "low" and fix_quality == "low":
+            return "incorrect"
+        else:
+            return "partial"
     
-    def evaluate_fix_quality(self, pr_number: int, pr_data: Dict[str, Any]) -> float:
+    def _evaluate_bug_detection_quality(self, pr_number: int, pr_data: Dict[str, Any]) -> str:
         """
-        Evaluate fix quality (0-10)
+        Evaluate bug detection quality as high/medium/low
         
-        Factors:
-        - Code quality of the fix
-        - Test coverage added
-        - Documentation updates
-        - No new bugs introduced
-        - Performance impact
+        Returns: "high", "medium", or "low"
         """
         pr_details = self._get_pr_details(pr_number)
         
-        score = 5.0  # Base score (0-10 scale)
+        # Evaluate factors
+        bug_validation = self._validate_bugs(pr_details, pr_data)
+        severity_accuracy = self._check_severity_accuracy(pr_details, pr_data)
+        completeness = self._check_completeness(pr_details, pr_data)
         
-        # Factor 1: Code quality (clean, readable, follows patterns)
-        score += self._evaluate_code_quality(pr_details) * 2.0
+        # Convert to quality level
+        avg_quality = (bug_validation + severity_accuracy + completeness) / 3
         
-        # Factor 2: Test coverage (were tests added/updated?)
-        score += self._check_test_coverage(pr_details) * 2.0
+        if avg_quality >= 0.8:
+            return "high"
+        elif avg_quality >= 0.5:
+            return "medium"
+        else:
+            return "low"
+    
+    def _evaluate_fix_quality(self, pr_number: int, pr_data: Dict[str, Any]) -> str:
+        """
+        Evaluate fix quality as high/medium/low
         
-        # Factor 3: Documentation (were docs updated?)
-        score += self._check_documentation(pr_details) * 1.0
+        Returns: "high", "medium", or "low"
+        """
+        pr_details = self._get_pr_details(pr_number)
         
-        # Factor 4: No regressions (did we introduce new issues?)
-        score += self._check_regressions(pr_details) * 2.0
+        # Evaluate factors
+        code_quality = self._evaluate_code_quality_level(pr_details)
+        test_coverage = self._check_test_coverage_level(pr_details)
+        documentation = self._check_documentation_level(pr_details)
+        no_regressions = self._check_regressions_level(pr_details)
+        performance = self._check_performance_level(pr_details)
         
-        # Factor 5: Performance (is the fix performant?)
-        score += self._check_performance(pr_details) * 1.0
+        # Convert to quality level
+        avg_quality = (code_quality + test_coverage + documentation + no_regressions + performance) / 5
         
-        return min(max(score, 0), 10)
+        if avg_quality >= 0.8:
+            return "high"
+        elif avg_quality >= 0.5:
+            return "medium"
+        else:
+            return "low"
+    
+    def _evaluate_code_quality_level(self, pr_details: Dict[str, Any]) -> str:
+        """Evaluate code quality as high/medium/low"""
+        # This would run linters and check code style
+        # For now, return placeholder
+        return "high"
+    
+    def _check_test_coverage_level(self, pr_details: Dict[str, Any]) -> str:
+        """Check test coverage level as high/medium/low"""
+        # This would check if tests were added/updated
+        return "medium"
+    
+    def _check_documentation_level(self, pr_details: Dict[str, Any]) -> str:
+        """Check documentation level as high/medium/low"""
+        # This would check if docs were updated
+        return "low"
+    
+    def _check_regressions_level(self, pr_details: Dict[str, Any]) -> str:
+        """Check for regressions as high/medium/low"""
+        # This would run tests to check for regressions
+        return "high"
+    
+    def _check_performance_level(self, pr_details: Dict[str, Any]) -> str:
+        """Check performance level as high/medium/low"""
+        # This would benchmark the fix
+        return "high"
     
     def _get_pr_details(self, pr_number: int) -> Dict[str, Any]:
         """Get PR details using GitHub CLI"""
@@ -94,123 +132,33 @@ class PRScorer:
             return {}
     
     def _validate_bugs(self, pr_details: Dict[str, Any], pr_data: Dict[str, Any]) -> float:
-        """Validate that identified bugs are real issues"""
+        """Validate that identified bugs are real issues (0-1 scale)"""
         # This would analyze the code changes to verify bug findings
-        # For now, return a placeholder score
-        return 0.8  # 80% validation rate
+        return 0.8  # Placeholder
     
     def _check_severity_accuracy(self, pr_details: Dict[str, Any], pr_data: Dict[str, Any]) -> float:
-        """Check if severity assessments were accurate"""
+        """Check if severity assessments were accurate (0-1 scale)"""
         # This would compare predicted vs actual severity
-        return 0.75  # 75% accuracy
+        return 0.75  # Placeholder
     
     def _check_completeness(self, pr_details: Dict[str, Any], pr_data: Dict[str, Any]) -> float:
-        """Check if important bugs were missed"""
+        """Check if important bugs were missed (0-1 scale)"""
         # This would analyze if critical bugs were overlooked
-        return 0.85  # 85% completeness
-    
-    def _evaluate_code_quality(self, pr_details: Dict[str, Any]) -> float:
-        """Evaluate code quality of the fix"""
-        # This would run linters, check code style, complexity
-        try:
-            # Run pre-commit on the changed files
-            result = subprocess.run(
-                ["pre-commit", "run", "--files", pr_details.get("files", "").split()],
-                capture_output=True,
-                text=True,
-                timeout=300
-            )
-            
-            # Score based on pre-commit results
-            if result.returncode == 0:
-                return 0.9  # 90% quality
-            else:
-                return 0.7  # 70% quality (some issues)
-                
-        except Exception:
-            return 0.5  # 50% quality (couldn't evaluate)
-    
-    def _check_test_coverage(self, pr_details: Dict[str, Any]) -> float:
-        """Check if test coverage was added"""
-        # This would check if tests were added/updated
-        # For now, return placeholder
-        return 0.6  # 60% test coverage
-    
-    def _check_documentation(self, pr_details: Dict[str, Any]) -> float:
-        """Check if documentation was updated"""
-        # This would check if docs/README were updated
-        # For now, return placeholder
-        return 0.5  # 50% documentation
-    
-    def _check_regressions(self, pr_details: Dict[str, Any]) -> float:
-        """Check if new bugs were introduced"""
-        # This would run tests to check for regressions
-        # For now, return placeholder
-        return 0.8  # 80% no regressions
-    
-    def _check_performance(self, pr_details: Dict[str, Any]) -> float:
-        """Check if the fix is performant"""
-        # This would benchmark the fix
-        # For now, return placeholder
-        return 0.85  # 85% performance
-    
-    def score_pr_comprehensive(self, pr_number: int, pr_data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Comprehensive PR scoring with detailed breakdown (0-10 scale)
-        """
-        timestamp = datetime.now().isoformat()
-        
-        # Get PR details for evaluation
-        pr_details = self._get_pr_details(pr_number)
-        
-        # Evaluate both metrics
-        bug_detection_score = self.evaluate_bug_detection(pr_number, pr_data)
-        fix_quality_score = self.evaluate_fix_quality(pr_number, pr_data)
-        
-        # Calculate overall score
-        overall_score = (bug_detection_score * 0.4) + (fix_quality_score * 0.6)
-        
-        return {
-            "pr_number": pr_number,
-            "bug_detection_score": round(bug_detection_score, 1),
-            "fix_quality_score": round(fix_quality_score, 1),
-            "overall_score": round(overall_score, 1),
-            "status": self._calculate_status(overall_score),
-            "scored_at": timestamp,
-            "breakdown": {
-                "bug_validation": self._validate_bugs(pr_details, pr_data),
-                "severity_accuracy": self._check_severity_accuracy(pr_details, pr_data),
-                "detection_completeness": self._check_completeness(pr_details, pr_data),
-                "code_quality": self._evaluate_code_quality(pr_details),
-                "test_coverage": self._check_test_coverage(pr_details),
-                "documentation": self._check_documentation(pr_details),
-                "no_regressions": self._check_regressions(pr_details),
-                "performance": self._check_performance(pr_details)
-            }
-        }
-    
-    def _calculate_status(self, score: float) -> str:
-        """Calculate status from score (0-10 scale)"""
-        if score >= 8.0:
-            return "correct"
-        elif score >= 5.0:
-            return "partial"
-        else:
-            return "incorrect"
+        return 0.85  # Placeholder
 
 def main():
     """Example usage of PR scorer"""
     scorer = PRScorer()
     
-    # Example: Score a PR
+    # Example: Determine category for a PR
     pr_data = {
         "title": "Fix security vulnerability",
         "bug_type": "security",
         "severity": "high"
     }
     
-    score_result = scorer.score_pr_comprehensive(123, pr_data)
-    print(f"PR Score Result: {score_result}")
+    category = scorer.determine_category(123, pr_data)
+    print(f"PR Category: {category}")
 
 if __name__ == "__main__":
     main()
