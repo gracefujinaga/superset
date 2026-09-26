@@ -19,7 +19,7 @@ class PRScorer:
     
     def evaluate_bug_detection(self, pr_number: int, pr_data: Dict[str, Any]) -> float:
         """
-        Evaluate bug detection accuracy (0-100)
+        Evaluate bug detection accuracy (0-10)
         
         Factors:
         - True positive rate (correctly identified bugs)
@@ -30,22 +30,22 @@ class PRScorer:
         # Get PR details and changes
         pr_details = self._get_pr_details(pr_number)
         
-        score = 50.0  # Base score
+        score = 5.0  # Base score (0-10 scale)
         
         # Factor 1: Bug validation rate (are identified bugs real?)
-        score += self._validate_bugs(pr_details, pr_data) * 20
+        score += self._validate_bugs(pr_details, pr_data) * 2.0
         
         # Factor 2: Severity accuracy (did we get the severity right?)
-        score += self._check_severity_accuracy(pr_details, pr_data) * 15
+        score += self._check_severity_accuracy(pr_details, pr_data) * 1.5
         
         # Factor 3: Detection completeness (did we miss important bugs?)
-        score += self._check_completeness(pr_details, pr_data) * 15
+        score += self._check_completeness(pr_details, pr_data) * 1.5
         
-        return min(max(score, 0), 100)
+        return min(max(score, 0), 10)
     
     def evaluate_fix_quality(self, pr_number: int, pr_data: Dict[str, Any]) -> float:
         """
-        Evaluate fix quality (0-100)
+        Evaluate fix quality (0-10)
         
         Factors:
         - Code quality of the fix
@@ -56,24 +56,24 @@ class PRScorer:
         """
         pr_details = self._get_pr_details(pr_number)
         
-        score = 50.0  # Base score
+        score = 5.0  # Base score (0-10 scale)
         
         # Factor 1: Code quality (clean, readable, follows patterns)
-        score += self._evaluate_code_quality(pr_details) * 20
+        score += self._evaluate_code_quality(pr_details) * 2.0
         
         # Factor 2: Test coverage (were tests added/updated?)
-        score += self._check_test_coverage(pr_details) * 20
+        score += self._check_test_coverage(pr_details) * 2.0
         
         # Factor 3: Documentation (were docs updated?)
-        score += self._check_documentation(pr_details) * 10
+        score += self._check_documentation(pr_details) * 1.0
         
         # Factor 4: No regressions (did we introduce new issues?)
-        score += self._check_regressions(pr_details) * 20
+        score += self._check_regressions(pr_details) * 2.0
         
         # Factor 5: Performance (is the fix performant?)
-        score += self._check_performance(pr_details) * 10
+        score += self._check_performance(pr_details) * 1.0
         
-        return min(max(score, 0), 100)
+        return min(max(score, 0), 10)
     
     def _get_pr_details(self, pr_number: int) -> Dict[str, Any]:
         """Get PR details using GitHub CLI"""
@@ -156,9 +156,12 @@ class PRScorer:
     
     def score_pr_comprehensive(self, pr_number: int, pr_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Comprehensive PR scoring with detailed breakdown
+        Comprehensive PR scoring with detailed breakdown (0-10 scale)
         """
         timestamp = datetime.now().isoformat()
+        
+        # Get PR details for evaluation
+        pr_details = self._get_pr_details(pr_number)
         
         # Evaluate both metrics
         bug_detection_score = self.evaluate_bug_detection(pr_number, pr_data)
@@ -169,9 +172,9 @@ class PRScorer:
         
         return {
             "pr_number": pr_number,
-            "bug_detection_score": round(bug_detection_score, 2),
-            "fix_quality_score": round(fix_quality_score, 2),
-            "overall_score": round(overall_score, 2),
+            "bug_detection_score": round(bug_detection_score, 1),
+            "fix_quality_score": round(fix_quality_score, 1),
+            "overall_score": round(overall_score, 1),
             "grade": self._calculate_grade(overall_score),
             "scored_at": timestamp,
             "breakdown": {
@@ -187,14 +190,14 @@ class PRScorer:
         }
     
     def _calculate_grade(self, score: float) -> str:
-        """Calculate letter grade from score"""
-        if score >= 90:
+        """Calculate letter grade from score (0-10 scale)"""
+        if score >= 9.0:
             return "A"
-        elif score >= 80:
+        elif score >= 8.0:
             return "B"
-        elif score >= 70:
+        elif score >= 7.0:
             return "C"
-        elif score >= 60:
+        elif score >= 6.0:
             return "D"
         else:
             return "F"

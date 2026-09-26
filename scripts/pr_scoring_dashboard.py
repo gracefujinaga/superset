@@ -54,7 +54,7 @@ def generate_pr_scoring_dashboard():
     return dashboard_data
 
 def calculate_summary(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Calculate summary statistics"""
+    """Calculate summary statistics (0-10 scale)"""
     if not scores:
         return {"total_prs": 0}
     
@@ -70,9 +70,9 @@ def calculate_summary(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
     
     return {
         "total_prs": total_prs,
-        "average_overall_score": round(avg_overall, 2),
-        "average_bug_detection": round(avg_bug_detection, 2),
-        "average_fix_quality": round(avg_fix_quality, 2),
+        "average_overall_score": round(avg_overall, 1),
+        "average_bug_detection": round(avg_bug_detection, 1),
+        "average_fix_quality": round(avg_fix_quality, 1),
         "grade_distribution": grade_counts,
         "top_grade": max(grade_counts.keys()) if grade_counts else "N/A"
     }
@@ -120,7 +120,7 @@ def get_grade_distribution(scores: List[Dict[str, Any]]) -> Dict[str, int]:
     return distribution
 
 def compare_metrics(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Compare bug detection vs fix quality metrics"""
+    """Compare bug detection vs fix quality metrics (0-10 scale)"""
     if not scores:
         return {}
     
@@ -132,8 +132,8 @@ def compare_metrics(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
     fix_stronger = sum(1 for s in scores if s["fix_quality_score"] > s["bug_detection_score"])
     
     return {
-        "average_bug_detection": round(avg_bug_detection, 2),
-        "average_fix_quality": round(avg_fix_quality, 2),
+        "average_bug_detection": round(avg_bug_detection, 1),
+        "average_fix_quality": round(avg_fix_quality, 1),
         "bug_stronger_count": bug_stronger,
         "fix_stronger_count": fix_stronger,
         "stronger_metric": "bug_detection" if bug_stronger > fix_stronger else "fix_quality"
@@ -262,13 +262,13 @@ def generate_top_prs_list(top_prs: List[Dict[str, Any]]) -> str:
     
     items = []
     for pr in top_prs:
-        score_class = "score-high" if pr["overall_score"] >= 80 else "score-medium" if pr["overall_score"] >= 60 else "score-low"
+        score_class = "score-high" if pr["overall_score"] >= 8.0 else "score-medium" if pr["overall_score"] >= 6.0 else "score-low"
         
         items.append(f"""
             <div class="pr-item">
                 <span><strong>PR #{pr['pr_number']}</strong></span>
-                <span class="pr-score {score_class}">{pr['overall_score']}/100 ({pr['grade']})</span>
-                <span>Bug: {pr['bug_detection_score']}/100 | Fix: {pr['fix_quality_score']}/100</span>
+                <span class="pr-score {score_class}">{pr['overall_score']}/10 ({pr['grade']})</span>
+                <span>Bug: {pr['bug_detection_score']}/10 | Fix: {pr['fix_quality_score']}/10</span>
             </div>
         """)
     
