@@ -100,40 +100,27 @@ gh workflow run nightly-scan.yml
 - **PR Scoring Dashboard**: Track PR performance over time with bug detection and fix quality scores
 - **Metrics Tracking Dashboard**: Comprehensive time-series tracking of all system metrics
 
-### PR Tracking and Scoring
+### PR Tracking and Categorization
 
-The system includes comprehensive PR tracking and scoring to measure automation effectiveness over time:
+The system includes comprehensive PR tracking and categorization to measure automation effectiveness over time:
 
-**PR Metrics:**
-- **Bug Detection Score (0-10)**: How accurately were bugs identified
-  - True positive rate
-  - False positive rate
-  - Severity accuracy
-  - Detection completeness
-
-- **Fix Quality Score (0-10)**: How good were the applied fixes
-  - Code quality (linting, style, complexity)
-  - Test coverage added
-  - Documentation updates
-  - No regressions introduced
-  - Performance impact
-
-- **Overall Score (0-10)**: Weighted average (40% bug detection, 60% fix quality)
-- **Status**: correct (8.0+), partial (5.0-7.9), incorrect (<5.0)
+**PR Categories:**
+- **correct**: Bug detection and fix quality both meet standards
+- **partial**: Either bug detection or fix quality partially meets standards
+- **incorrect**: Neither bug detection nor fix quality meets standards
 
 **Features:**
-- **Historical Storage**: All PR scores stored in `pr_tracking/` directory
-- **PR Tagging**: Automatic PR comments with scores and status
-- **Trend Analysis**: Track scoring trends over time
-- **Dashboard**: Real-time PR scoring dashboard with auto-refresh
-- **Top PRs**: Identify best performing PRs
-- **Status Distribution**: View distribution of correct/partial/incorrect across all PRs
+- **Historical Storage**: All PR categories stored in `pr_tracking/` directory
+- **PR Tagging**: Automatic PR comments with categories
+- **Time-Bucketed Tracking**: Daily and weekly category counts
+- **Dashboard**: Real-time PR category dashboard with auto-refresh
+- **Category Distribution**: View distribution of correct/partial/incorrect across time buckets
 
-**PR Scoring Dashboard:**
-- Summary statistics (total PRs, average scores, status distribution)
-- Trend analysis (improving/declining/stable)
-- Top performing PRs with detailed scores
-- Metric comparison (bug detection vs fix quality)
+**PR Category Dashboard:**
+- Overall statistics (total PRs, category counts)
+- Daily category buckets (last 30 days)
+- Weekly category aggregates
+- Time-series view of category trends
 - Auto-refresh every 60 seconds
 
 ### Metrics Tracking Dashboard
