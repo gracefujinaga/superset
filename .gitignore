@@ -25,6 +25,8 @@ __pycache__
 .local
 .cache
 .bento*
+.devin/config.local.json
+.devin/mcp_config.local.json
 .cache-loader
 .coverage
 cover
