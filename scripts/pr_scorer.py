@@ -175,7 +175,7 @@ class PRScorer:
             "bug_detection_score": round(bug_detection_score, 1),
             "fix_quality_score": round(fix_quality_score, 1),
             "overall_score": round(overall_score, 1),
-            "grade": self._calculate_grade(overall_score),
+            "status": self._calculate_status(overall_score),
             "scored_at": timestamp,
             "breakdown": {
                 "bug_validation": self._validate_bugs(pr_details, pr_data),
@@ -189,18 +189,14 @@ class PRScorer:
             }
         }
     
-    def _calculate_grade(self, score: float) -> str:
-        """Calculate letter grade from score (0-10 scale)"""
-        if score >= 9.0:
-            return "A"
-        elif score >= 8.0:
-            return "B"
-        elif score >= 7.0:
-            return "C"
-        elif score >= 6.0:
-            return "D"
+    def _calculate_status(self, score: float) -> str:
+        """Calculate status from score (0-10 scale)"""
+        if score >= 8.0:
+            return "correct"
+        elif score >= 5.0:
+            return "partial"
         else:
-            return "F"
+            return "incorrect"
 
 def main():
     """Example usage of PR scorer"""
