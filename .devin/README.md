@@ -91,6 +91,32 @@ gh workflow run nightly-scan.yml
 - Coverage statistics
 - Performance metrics
 - Comparison with previous scans
+- **Engineering Leader Dashboard**: Real-time HTML status dashboard with auto-refresh
+- **Metrics & Analytics**: Throughput, effectiveness, and system health metrics
+- **Success/Failure Signals**: External notifications for system status
+- **Programmatic Session Management**: Full observability with status tracking and progress monitoring
+
+### Engineering Leader Q&A
+
+**"Is the system working?"**
+- Health Score (0-100) and status (excellent/good/fair/poor)
+- Success rate percentage
+- Real-time status dashboard with auto-refresh
+
+**"How effective is it?"**
+- Quality score (0-100) combining success rate, fix rate, and coverage
+- Throughput metrics (sessions per day, findings per hour)
+- Average scan time and total findings
+
+**"Are things getting better?"**
+- Finding trend (increasing/decreasing/stable)
+- Quality trend (improving/degrading/stable)
+- Comparison vs baseline with percentage changes
+
+**"Should I be concerned?"**
+- Risk level assessment (LOW/MEDIUM/HIGH)
+- Attention needed indicators
+- Action items with priorities and deadlines
 
 ### Permissions
 
