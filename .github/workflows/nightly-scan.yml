@@ -83,10 +83,10 @@ jobs:
         run: |
           python scripts/metrics_analytics.py
 
-      - name: Generate PR Scoring Dashboard
+      - name: Generate PR Category Dashboard
         if: always()
         run: |
-          python scripts/pr_scoring_dashboard.py
+          python scripts/pr_category_dashboard.py
 
       - name: Generate Metrics Tracking Dashboard
         if: always()
