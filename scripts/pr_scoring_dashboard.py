@@ -30,7 +30,7 @@ def generate_pr_scoring_dashboard():
         "summary": calculate_summary(scores),
         "trends": calculate_trends(scores),
         "top_prs": get_top_prs(scores),
-        "grade_distribution": get_grade_distribution(scores),
+        "status_distribution": get_status_distribution(scores),
         "metric_comparison": compare_metrics(scores)
     }
     
@@ -63,18 +63,18 @@ def calculate_summary(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
     avg_bug_detection = sum(s["bug_detection_score"] for s in scores) / total_prs
     avg_fix_quality = sum(s["fix_quality_score"] for s in scores) / total_prs
     
-    grade_counts = {}
+    status_counts = {}
     for score in scores:
-        grade = score["grade"]
-        grade_counts[grade] = grade_counts.get(grade, 0) + 1
+        status = score["status"]
+        status_counts[status] = status_counts.get(status, 0) + 1
     
     return {
         "total_prs": total_prs,
         "average_overall_score": round(avg_overall, 1),
         "average_bug_detection": round(avg_bug_detection, 1),
         "average_fix_quality": round(avg_fix_quality, 1),
-        "grade_distribution": grade_counts,
-        "top_grade": max(grade_counts.keys()) if grade_counts else "N/A"
+        "status_distribution": status_counts,
+        "most_common_status": max(status_counts.keys()) if status_counts else "N/A"
     }
 
 def calculate_trends(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -112,11 +112,11 @@ def get_top_prs(scores: List[Dict[str, Any]], limit: int = 10) -> List[Dict[str,
     sorted_scores = sorted(scores, key=lambda x: x["overall_score"], reverse=True)
     return sorted_scores[:limit]
 
-def get_grade_distribution(scores: List[Dict[str, Any]]) -> Dict[str, int]:
-    """Get distribution of grades"""
-    distribution = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
+def get_status_distribution(scores: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Get distribution of statuses"""
+    distribution = {"correct": 0, "partial": 0, "incorrect": 0}
     for score in scores:
-        distribution[score["grade"]] += 1
+        distribution[score["status"]] += 1
     return distribution
 
 def compare_metrics(scores: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -157,13 +157,11 @@ def generate_dashboard_html(data: Dict[str, Any]) -> str:
         .card-value {{ font-size: 2em; font-weight: bold; color: #333; }}
         .card-label {{ color: #666; font-size: 0.9em; }}
         .trend-section {{ margin-bottom: 30px; }}
-        .grade-bar {{ display: flex; height: 30px; margin: 10px 0; }}
-        .grade-segment {{ height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }}
-        .grade-A {{ background: #4CAF50; }}
-        .grade-B {{ background: #2196F3; }}
-        .grade-C {{ background: #FF9800; }}
-        .grade-D {{ background: #f44336; }}
-        .grade-F {{ background: #9E9E9E; }}
+        .status-bar {{ display: flex; height: 30px; margin: 10px 0; }}
+        .status-segment {{ height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }}
+        .status-correct {{ background: #4CAF50; }}
+        .status-partial {{ background: #FF9800; }}
+        .status-incorrect {{ background: #f44336; }}
         .top-prs {{ margin-top: 30px; }}
         .pr-item {{ padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }}
         .pr-score {{ font-weight: bold; }}
@@ -200,8 +198,8 @@ def generate_dashboard_html(data: Dict[str, Any]) -> str:
                 <div class="card-label">Avg Fix Quality</div>
             </div>
             <div class="card">
-                <div class="card-value">{summary['top_grade']}</div>
-                <div class="card-label">Most Common Grade</div>
+                <div class="card-value">{summary['most_common_status']}</div>
+                <div class="card-label">Most Common Status</div>
             </div>
         </div>
         
@@ -212,8 +210,8 @@ def generate_dashboard_html(data: Dict[str, Any]) -> str:
             <p><strong>Quarterly Averages:</strong> {', '.join(map(str, trends.get('quarter_averages', [])))}</p>
         </div>
         
-        <h2>Grade Distribution</h2>
-        {generate_grade_bar(data['grade_distribution'])}
+        <h2>Status Distribution</h2>
+        {generate_status_bar(data['status_distribution'])}
         
         <div class="top-prs">
             <h2>Top Performing PRs</h2>
@@ -234,21 +232,21 @@ def generate_dashboard_html(data: Dict[str, Any]) -> str:
 </body>
 </html>"""
 
-def generate_grade_bar(distribution: Dict[str, int]) -> str:
-    """Generate grade distribution bar"""
+def generate_status_bar(distribution: Dict[str, int]) -> str:
+    """Generate status distribution bar"""
     total = sum(distribution.values())
     if total == 0:
-        return "<p>No grade data available</p>"
+        return "<p>No status data available</p>"
     
     segments = []
-    for grade in ["A", "B", "C", "D", "F"]:
-        count = distribution.get(grade, 0)
+    for status in ["correct", "partial", "incorrect"]:
+        count = distribution.get(status, 0)
         if count > 0:
             percentage = (count / total) * 100
             segments.append(f"""
-                <div class="grade-bar">
-                    <div class="grade-segment grade-{grade}" style="width: {percentage}%">
-                        {grade}: {count} ({percentage:.1f}%)
+                <div class="status-bar">
+                    <div class="status-segment status-{status}" style="width: {percentage}%">
+                        {status}: {count} ({percentage:.1f}%)
                     </div>
                 </div>
             """)
@@ -267,7 +265,7 @@ def generate_top_prs_list(top_prs: List[Dict[str, Any]]) -> str:
         items.append(f"""
             <div class="pr-item">
                 <span><strong>PR #{pr['pr_number']}</strong></span>
-                <span class="pr-score {score_class}">{pr['overall_score']}/10 ({pr['grade']})</span>
+                <span class="pr-score {score_class}">{pr['overall_score']}/10 ({pr['status']})</span>
                 <span>Bug: {pr['bug_detection_score']}/10 | Fix: {pr['fix_quality_score']}/10</span>
             </div>
         """)

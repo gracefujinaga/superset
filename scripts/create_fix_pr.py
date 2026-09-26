@@ -100,7 +100,7 @@ Generated with [Devin](https://devin.ai)
         # Tag the PR with its score
         pr_tracker.tag_pr_with_score(pr_number, score_result)
         
-        print(f"[{timestamp}] PR #{pr_number} created and scored: {score_result['overall_score']}/100 ({score_result['grade']})")
+        print(f"[{timestamp}] PR #{pr_number} created and scored: {score_result['overall_score']}/10 ({score_result['status']})")
 
 def load_all_findings():
     """Load findings from all scan results"""
