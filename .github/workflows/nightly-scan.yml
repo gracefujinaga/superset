@@ -88,6 +88,11 @@ jobs:
         run: |
           python scripts/pr_scoring_dashboard.py
 
+      - name: Generate Metrics Tracking Dashboard
+        if: always()
+        run: |
+          python scripts/metrics_tracking_dashboard.py
+
       - name: Create PR for Fixes
         if: |
           steps.security-check.outputs.security_completed == 'true' ||

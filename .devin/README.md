@@ -98,6 +98,7 @@ gh workflow run nightly-scan.yml
 - **Success/Failure Signals**: External notifications for system status
 - **Programmatic Session Management**: Full observability with status tracking and progress monitoring
 - **PR Scoring Dashboard**: Track PR performance over time with bug detection and fix quality scores
+- **Metrics Tracking Dashboard**: Comprehensive time-series tracking of all system metrics
 
 ### PR Tracking and Scoring
 
@@ -134,6 +135,50 @@ The system includes comprehensive PR tracking and scoring to measure automation 
 - Top performing PRs with detailed scores
 - Metric comparison (bug detection vs fix quality)
 - Auto-refresh every 60 seconds
+
+### Metrics Tracking Dashboard
+
+**Location:** `reports/metrics-tracking-dashboard.html`
+
+The metrics tracking dashboard provides comprehensive time-series visualization of all system metrics:
+
+**Features:**
+- **Recent Trends Card**: Compare last 7 days vs previous 7 days for key metrics
+  - Success rate trend
+  - Findings per day trend
+  - Bug detection score trend
+  - Fix quality score trend
+  - Overall PR score trend
+
+- **Daily Metrics Table (Last 30 Days)**:
+  - Sessions run per day
+  - Success rate percentage
+  - Total findings per day
+  - PRs scored per day
+  - Average bug detection score
+  - Average fix quality score
+  - Average overall score
+  - Color-coded values (green ≥80, orange ≥60, red <60)
+
+- **Weekly Aggregates**:
+  - Sessions per week
+  - Weekly success rate
+  - Total findings per week
+  - PRs scored per week
+  - Weekly average scores
+  - Week-over-week comparisons
+
+**Data Sources:**
+- Session data from `logs/` directory
+- PR scoring data from `pr_tracking/` directory
+- Metrics data from `reports/` directory
+
+**Trend Indicators:**
+- ↑ Increasing (green)
+- ↓ Decreasing (red)
+- → Stable (gray)
+
+**Auto-refresh:** Every 60 seconds
 
 ### Engineering Leader Q&A
 
