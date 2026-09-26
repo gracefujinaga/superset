@@ -50,8 +50,8 @@ class PRTracker:
     def score_pr(self, pr_number: int, bug_detection_score: float, fix_quality_score: float) -> Dict[str, Any]:
         """
         Score a PR on two metrics:
-        - Bug Detection Score (0-100): How accurate was the bug detection
-        - Fix Quality Score (0-100): How good was the fix applied
+        - Bug Detection Score (0-10): How accurate was the bug detection
+        - Fix Quality Score (0-10): How good was the fix applied
         
         Returns overall score and component scores
         """
@@ -63,9 +63,9 @@ class PRTracker:
         
         score_data = {
             "pr_number": pr_number,
-            "bug_detection_score": round(bug_detection_score, 2),
-            "fix_quality_score": round(fix_quality_score, 2),
-            "overall_score": round(overall_score, 2),
+            "bug_detection_score": round(bug_detection_score, 1),
+            "fix_quality_score": round(fix_quality_score, 1),
+            "overall_score": round(overall_score, 1),
             "scored_at": timestamp,
             "grade": self._calculate_grade(overall_score)
         }
@@ -92,19 +92,19 @@ class PRTracker:
         with open(self.pr_database, "w") as f:
             json.dump(database, f, indent=2)
         
-        print(f"Scored PR #{pr_number}: Detection={bug_detection_score}, Fix={fix_quality_score}, Overall={overall_score:.2f}")
+        print(f"Scored PR #{pr_number}: Detection={bug_detection_score}, Fix={fix_quality_score}, Overall={overall_score:.1f}")
         
         return score_data
     
     def _calculate_grade(self, score: float) -> str:
-        """Calculate letter grade from score"""
-        if score >= 90:
+        """Calculate letter grade from score (0-10 scale)"""
+        if score >= 9.0:
             return "A"
-        elif score >= 80:
+        elif score >= 8.0:
             return "B"
-        elif score >= 70:
+        elif score >= 7.0:
             return "C"
-        elif score >= 60:
+        elif score >= 6.0:
             return "D"
         else:
             return "F"
@@ -112,10 +112,10 @@ class PRTracker:
     def tag_pr_with_score(self, pr_number: int, score_data: Dict[str, Any]) -> bool:
         """Tag the PR with its score using GitHub CLI"""
         try:
-            # Create score tag format
-            tag_message = f"📊 PR Score: {score_data['overall_score']}/100 (Grade: {score_data['grade']})\n" \
-                        f"Bug Detection: {score_data['bug_detection_score']}/100\n" \
-                        f"Fix Quality: {score_data['fix_quality_score']}/100"
+            # Create score tag format (0-10 scale)
+            tag_message = f"📊 PR Score: {score_data['overall_score']}/10 (Grade: {score_data['grade']})\n" \
+                        f"Bug Detection: {score_data['bug_detection_score']}/10\n" \
+                        f"Fix Quality: {score_data['fix_quality_score']}/10"
             
             # Use GitHub CLI to add comment with score
             result = subprocess.run(

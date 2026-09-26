@@ -431,7 +431,7 @@ def generate_daily_table_rows(dates: List[str], daily_data: Dict[str, Any]) -> s
             <tr>
                 <td>{date}</td>
                 <td>{sessions}</td>
-                <td class="{get_metric_class(success_rate)}">{success_rate}%</td>
+                <td class="{get_metric_class(success_rate, is_percentage=True)}">{success_rate}%</td>
                 <td>{data.get('findings', 0)}</td>
                 <td>{data.get('prs_scored', 0)}</td>
                 <td class="{get_metric_class(data.get('avg_bug_detection', 0))}">{data.get('avg_bug_detection', 0)}</td>
@@ -457,7 +457,7 @@ def generate_weekly_table_rows(weekly_data: Dict[str, Any]) -> str:
             <tr>
                 <td>{week}</td>
                 <td>{sessions}</td>
-                <td class="{get_metric_class(success_rate)}">{success_rate}%</td>
+                <td class="{get_metric_class(success_rate, is_percentage=True)}">{success_rate}%</td>
                 <td>{data.get('findings', 0)}</td>
                 <td>{data.get('prs_scored', 0)}</td>
                 <td class="{get_metric_class(data.get('avg_bug_detection', 0))}">{data.get('avg_bug_detection', 0)}</td>
@@ -468,14 +468,22 @@ def generate_weekly_table_rows(weekly_data: Dict[str, Any]) -> str:
     
     return "\n".join(rows)
 
-def get_metric_class(value: float) -> str:
-    """Get CSS class based on metric value"""
-    if value >= 80:
-        return "metric-good"
-    elif value >= 60:
-        return "metric-warning"
+def get_metric_class(value: float, is_percentage: bool = False) -> str:
+    """Get CSS class based on metric value (0-10 scale, or percentage)"""
+    if is_percentage:
+        if value >= 80:
+            return "metric-good"
+        elif value >= 60:
+            return "metric-warning"
+        else:
+            return "metric-bad"
     else:
-        return "metric-bad"
+        if value >= 8.0:
+            return "metric-good"
+        elif value >= 6.0:
+            return "metric-warning"
+        else:
+            return "metric-bad"
 
 if __name__ == "__main__":
     generate_metrics_tracking_dashboard()

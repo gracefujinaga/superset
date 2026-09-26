@@ -105,21 +105,21 @@ gh workflow run nightly-scan.yml
 The system includes comprehensive PR tracking and scoring to measure automation effectiveness over time:
 
 **PR Metrics:**
-- **Bug Detection Score (0-100)**: How accurately were bugs identified
+- **Bug Detection Score (0-10)**: How accurately were bugs identified
   - True positive rate
   - False positive rate
   - Severity accuracy
   - Detection completeness
 
-- **Fix Quality Score (0-100)**: How good were the applied fixes
+- **Fix Quality Score (0-10)**: How good were the applied fixes
   - Code quality (linting, style, complexity)
   - Test coverage added
   - Documentation updates
   - No regressions introduced
   - Performance impact
 
-- **Overall Score (0-100)**: Weighted average (40% bug detection, 60% fix quality)
-- **Letter Grade**: A (90+), B (80+), C (70+), D (60+), F (<60)
+- **Overall Score (0-10)**: Weighted average (40% bug detection, 60% fix quality)
+- **Letter Grade**: A (9.0+), B (8.0+), C (7.0+), D (6.0+), F (<6.0)
 
 **Features:**
 - **Historical Storage**: All PR scores stored in `pr_tracking/` directory
@@ -158,7 +158,7 @@ The metrics tracking dashboard provides comprehensive time-series visualization 
   - Average bug detection score
   - Average fix quality score
   - Average overall score
-  - Color-coded values (green ≥80, orange ≥60, red <60)
+  - Color-coded values (green ≥8.0, orange ≥6.0, red <6.0 for scores; green ≥80%, orange ≥60%, red <60% for percentages)
 
 - **Weekly Aggregates**:
   - Sessions per week
