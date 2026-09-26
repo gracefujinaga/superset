@@ -119,18 +119,18 @@ The system includes comprehensive PR tracking and scoring to measure automation 
   - Performance impact
 
 - **Overall Score (0-10)**: Weighted average (40% bug detection, 60% fix quality)
-- **Letter Grade**: A (9.0+), B (8.0+), C (7.0+), D (6.0+), F (<6.0)
+- **Status**: correct (8.0+), partial (5.0-7.9), incorrect (<5.0)
 
 **Features:**
 - **Historical Storage**: All PR scores stored in `pr_tracking/` directory
-- **PR Tagging**: Automatic PR comments with scores and grades
+- **PR Tagging**: Automatic PR comments with scores and status
 - **Trend Analysis**: Track scoring trends over time
 - **Dashboard**: Real-time PR scoring dashboard with auto-refresh
 - **Top PRs**: Identify best performing PRs
-- **Grade Distribution**: View distribution of grades across all PRs
+- **Status Distribution**: View distribution of correct/partial/incorrect across all PRs
 
 **PR Scoring Dashboard:**
-- Summary statistics (total PRs, average scores, grade distribution)
+- Summary statistics (total PRs, average scores, status distribution)
 - Trend analysis (improving/declining/stable)
 - Top performing PRs with detailed scores
 - Metric comparison (bug detection vs fix quality)
