@@ -83,6 +83,11 @@ jobs:
         run: |
           python scripts/metrics_analytics.py
 
+      - name: Generate PR Scoring Dashboard
+        if: always()
+        run: |
+          python scripts/pr_scoring_dashboard.py
+
       - name: Create PR for Fixes
         if: |
           steps.security-check.outputs.security_completed == 'true' ||
@@ -100,6 +105,7 @@ jobs:
             scan-results/
             reports/
             logs/
+            pr_tracking/
           retention-days: 30
 
       - name: Comment on Clean Run
