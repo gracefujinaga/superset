@@ -47,73 +47,62 @@ class PRTracker:
         
         print(f"Tracked PR #{pr_number}")
     
-    def score_pr(self, pr_number: int, bug_detection_score: float, fix_quality_score: float) -> Dict[str, Any]:
+    def categorize_pr(self, pr_number: int, category: str) -> Dict[str, Any]:
         """
-        Score a PR on two metrics:
-        - Bug Detection Score (0-10): How accurate was the bug detection
-        - Fix Quality Score (0-10): How good was the fix applied
+        Categorize a PR into one of three categories:
+        - correct: Bug detection and fix quality both meet standards
+        - partial: Either bug detection or fix quality partially meets standards
+        - incorrect: Neither bug detection nor fix quality meets standards
         
-        Returns overall score and component scores
+        Returns category data
         """
         timestamp = datetime.now().isoformat()
         
-        # Calculate overall score (weighted average)
-        # Bug detection: 40% weight, Fix quality: 60% weight
-        overall_score = (bug_detection_score * 0.4) + (fix_quality_score * 0.6)
+        # Validate category
+        valid_categories = ["correct", "partial", "incorrect"]
+        if category not in valid_categories:
+            raise ValueError(f"Invalid category. Must be one of: {valid_categories}")
         
-        score_data = {
+        category_data = {
             "pr_number": pr_number,
-            "bug_detection_score": round(bug_detection_score, 1),
-            "fix_quality_score": round(fix_quality_score, 1),
-            "overall_score": round(overall_score, 1),
-            "scored_at": timestamp,
-            "status": self._calculate_status(overall_score)
+            "category": category,
+            "categorized_at": timestamp
         }
         
         # Load scores database
         with open(self.scores_database, "r") as f:
             scores = json.load(f)
         
-        # Add score
-        scores.append(score_data)
+        # Add category
+        scores.append(category_data)
         
         # Save updated scores
         with open(self.scores_database, "w") as f:
             json.dump(scores, f, indent=2)
         
-        # Update PR database to mark as scored
+        # Update PR database to mark as categorized
         with open(self.pr_database, "r") as f:
             database = json.load(f)
         
         if str(pr_number) in database:
-            database[str(pr_number)]["scored"] = True
-            database[str(pr_number)]["score"] = score_data
+            database[str(pr_number)]["categorized"] = True
+            database[str(pr_number)]["category"] = category_data
         
         with open(self.pr_database, "w") as f:
             json.dump(database, f, indent=2)
         
-        print(f"Scored PR #{pr_number}: Detection={bug_detection_score}, Fix={fix_quality_score}, Overall={overall_score:.1f}")
+        print(f"Categorized PR #{pr_number}: {category}")
         
-        return score_data
+        return category_data
     
-    def _calculate_status(self, score: float) -> str:
-        """Calculate status from score (0-10 scale)"""
-        if score >= 8.0:
-            return "correct"
-        elif score >= 5.0:
-            return "partial"
-        else:
-            return "incorrect"
-    
-    def tag_pr_with_score(self, pr_number: int, score_data: Dict[str, Any]) -> bool:
-        """Tag the PR with its score using GitHub CLI"""
+    def tag_pr_with_category(self, pr_number: int, category_data: Dict[str, Any]) -> bool:
+        """Tag the PR with its category using GitHub CLI"""
         try:
-            # Create score tag format (0-10 scale)
-            tag_message = f"📊 PR Score: {score_data['overall_score']}/10 (Status: {score_data['status']})\n" \
-                        f"Bug Detection: {score_data['bug_detection_score']}/10\n" \
-                        f"Fix Quality: {score_data['fix_quality_score']}/10"
+            # Create category tag format
+            tag_message = f"📊 PR Category: {category_data['category']}\n" \
+                        f"Categorized at: {category_data['categorized_at']}"
             
-            # Use GitHub CLI to add comment with score
+            # Use GitHub CLI to add comment with category
             result = subprocess.run(
                 ["gh", "pr", "comment", str(pr_number), "--body", tag_message],
                 capture_output=True,
@@ -121,7 +110,7 @@ class PRTracker:
             )
             
             if result.returncode == 0:
-                print(f"Successfully tagged PR #{pr_number} with score")
+                print(f"Successfully tagged PR #{pr_number} with category")
                 return True
             else:
                 print(f"Failed to tag PR #{pr_number}: {result.stderr}")
@@ -131,8 +120,8 @@ class PRTracker:
             print(f"Error tagging PR #{pr_number}: {e}")
             return False
     
-    def get_pr_score(self, pr_number: int) -> Optional[Dict[str, Any]]:
-        """Get the score for a specific PR"""
+    def get_pr_category(self, pr_number: int) -> Optional[Dict[str, Any]]:
+        """Get the category for a specific PR"""
         with open(self.scores_database, "r") as f:
             scores = json.load(f)
         

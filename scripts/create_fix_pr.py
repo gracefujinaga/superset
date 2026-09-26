@@ -87,20 +87,20 @@ Generated with [Devin](https://devin.ai)
             "branch": branch_name
         })
         
-        # Score the PR (simulated scores for now)
-        # In production, these would be calculated from actual analysis
+        # Score the PR (determine category)
         pr_data = {
             "title": f"Nightly Scan Fixes - {timestamp.strftime('%Y-%m-%d')}",
             "bug_type": "mixed",
             "severity": "varies"
         }
         
-        score_result = pr_scorer.score_pr_comprehensive(pr_number, pr_data)
+        category = pr_scorer.determine_category(pr_number, pr_data)
         
-        # Tag the PR with its score
-        pr_tracker.tag_pr_with_score(pr_number, score_result)
+        # Track and tag the PR with category
+        pr_tracker.categorize_pr(pr_number, category)
+        pr_tracker.tag_pr_with_category(pr_number, {"category": category, "categorized_at": timestamp})
         
-        print(f"[{timestamp}] PR #{pr_number} created and scored: {score_result['overall_score']}/10 ({score_result['status']})")
+        print(f"[{timestamp}] PR #{pr_number} created and categorized: {category}")
 
 def load_all_findings():
     """Load findings from all scan results"""

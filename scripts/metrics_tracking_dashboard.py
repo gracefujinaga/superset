@@ -136,11 +136,11 @@ def generate_time_series(session_data: List[Dict], pr_data: List[Dict], metrics_
     
     # Process PR data
     for pr in pr_data:
-        scored_at = pr.get("scored_at", "")
-        if not scored_at:
+        categorized_at = pr.get("categorized_at", "")
+        if not categorized_at:
             continue
         
-        date = scored_at.split("T")[0]
+        date = categorized_at.split("T")[0]
         if date not in time_series["daily"]:
             time_series["daily"][date] = {
                 "sessions": 0,
@@ -148,29 +148,28 @@ def generate_time_series(session_data: List[Dict], pr_data: List[Dict], metrics_
                 "failed": 0,
                 "findings": 0,
                 "duration_total": 0,
-                "prs_scored": 0,
-                "avg_bug_detection": 0,
-                "avg_fix_quality": 0,
-                "avg_overall_score": 0
+                "prs_categorized": 0,
+                "correct": 0,
+                "partial": 0,
+                "incorrect": 0
             }
         
-        if "prs_scored" not in time_series["daily"][date]:
-            time_series["daily"][date]["prs_scored"] = 0
-            time_series["daily"][date]["avg_bug_detection"] = 0
-            time_series["daily"][date]["avg_fix_quality"] = 0
-            time_series["daily"][date]["avg_overall_score"] = 0
+        if "prs_categorized" not in time_series["daily"][date]:
+            time_series["daily"][date]["prs_categorized"] = 0
+            time_series["daily"][date]["correct"] = 0
+            time_series["daily"][date]["partial"] = 0
+            time_series["daily"][date]["incorrect"] = 0
         
-        time_series["daily"][date]["prs_scored"] += 1
-        time_series["daily"][date]["avg_bug_detection"] += pr.get("bug_detection_score", 0)
-        time_series["daily"][date]["avg_fix_quality"] += pr.get("fix_quality_score", 0)
-        time_series["daily"][date]["avg_overall_score"] += pr.get("overall_score", 0)
+        time_series["daily"][date]["prs_categorized"] += 1
+        category = pr.get("category", "unknown")
+        if category in time_series["daily"][date]:
+            time_series["daily"][date][category] += 1
     
     # Calculate averages for PRs
     for date, data in time_series["daily"].items():
-        if data.get("prs_scored", 0) > 0:
-            data["avg_bug_detection"] = round(data["avg_bug_detection"] / data["prs_scored"], 2)
-            data["avg_fix_quality"] = round(data["avg_fix_quality"] / data["prs_scored"], 2)
-            data["avg_overall_score"] = round(data["avg_overall_score"] / data["prs_scored"], 2)
+        if data.get("prs_categorized", 0) > 0:
+            total = data["correct"] + data["partial"] + data["incorrect"]
+            # No numeric averages needed, just counts
         if data.get("sessions", 0) > 0:
             data["avg_duration"] = round(data["duration_total"] / data["sessions"] / 60, 2)  # minutes
     
@@ -187,36 +186,32 @@ def generate_time_series(session_data: List[Dict], pr_data: List[Dict], metrics_
                     "successful": 0,
                     "failed": 0,
                     "findings": 0,
-                    "prs_scored": 0,
-                    "avg_bug_detection": 0,
-                    "avg_fix_quality": 0,
-                    "avg_overall_score": 0
+                    "prs_categorized": 0,
+                    "correct": 0,
+                    "partial": 0,
+                    "incorrect": 0
                 }
             
             time_series["weekly"][week_key]["sessions"] += data.get("sessions", 0)
             time_series["weekly"][week_key]["successful"] += data.get("successful", 0)
             time_series["weekly"][week_key]["failed"] += data.get("failed", 0)
             time_series["weekly"][week_key]["findings"] += data.get("findings", 0)
-            time_series["weekly"][week_key]["prs_scored"] += data.get("prs_scored", 0)
-            time_series["weekly"][week_key]["avg_bug_detection"] += data.get("avg_bug_detection", 0)
-            time_series["weekly"][week_key]["avg_fix_quality"] += data.get("avg_fix_quality", 0)
-            time_series["weekly"][week_key]["avg_overall_score"] += data.get("avg_overall_score", 0)
+            time_series["weekly"][week_key]["prs_categorized"] += data.get("prs_categorized", 0)
+            time_series["weekly"][week_key]["correct"] += data.get("correct", 0)
+            time_series["weekly"][week_key]["partial"] += data.get("partial", 0)
+            time_series["weekly"][week_key]["incorrect"] += data.get("incorrect", 0)
         except ValueError:
             continue
     
-    # Calculate weekly averages
+    # Calculate weekly totals (no averages needed, just counts)
     for week, data in time_series["weekly"].items():
-        if data.get("prs_scored", 0) > 0:
-            weeks = len([d for d in time_series["daily"].items() if week in d[0]])
-            if weeks > 0:
-                data["avg_bug_detection"] = round(data["avg_bug_detection"] / weeks, 2)
-                data["avg_fix_quality"] = round(data["avg_fix_quality"] / weeks, 2)
-                data["avg_overall_score"] = round(data["avg_overall_score"] / weeks, 2)
+        # No numeric averages needed, just aggregate counts
+        pass
     
     return time_series
 
 def calculate_overall_trends(time_series: Dict[str, Any]) -> Dict[str, Any]:
-    """Calculate overall trends from time-series data"""
+    """Calculate overall trends from time-series data (category-based)"""
     daily_data = time_series.get("daily", {})
     
     if len(daily_data) < 2:
@@ -227,72 +222,38 @@ def calculate_overall_trends(time_series: Dict[str, Any]) -> Dict[str, Any]:
     recent = sorted_dates[-7:] if len(sorted_dates) >= 7 else sorted_dates
     previous = sorted_dates[-14:-7] if len(sorted_dates) >= 14 else sorted_dates[:len(sorted_dates)//2]
     
-    # Calculate averages
-    recent_avg = {
-        "success_rate": 0,
-        "findings_per_day": 0,
-        "avg_bug_detection": 0,
-        "avg_fix_quality": 0,
-        "avg_overall_score": 0
-    }
+    # Calculate category counts
+    recent_correct = sum(daily_data[d].get("correct", 0) for d in recent)
+    recent_partial = sum(daily_data[d].get("partial", 0) for d in recent)
+    recent_incorrect = sum(daily_data[d].get("incorrect", 0) for d in recent)
     
-    previous_avg = {
-        "success_rate": 0,
-        "findings_per_day": 0,
-        "avg_bug_detection": 0,
-        "avg_fix_quality": 0,
-        "avg_overall_score": 0
-    }
-    
-    for date in recent:
-        data = daily_data[date]
-        sessions = data.get("sessions", 0)
-        if sessions > 0:
-            recent_avg["success_rate"] += data.get("successful", 0) / sessions
-        recent_avg["findings_per_day"] += data.get("findings", 0)
-        recent_avg["avg_bug_detection"] += data.get("avg_bug_detection", 0)
-        recent_avg["avg_fix_quality"] += data.get("avg_fix_quality", 0)
-        recent_avg["avg_overall_score"] += data.get("avg_overall_score", 0)
-    
-    for date in previous:
-        data = daily_data[date]
-        sessions = data.get("sessions", 0)
-        if sessions > 0:
-            previous_avg["success_rate"] += data.get("successful", 0) / sessions
-        previous_avg["findings_per_day"] += data.get("findings", 0)
-        previous_avg["avg_bug_detection"] += data.get("avg_bug_detection", 0)
-        previous_avg["avg_fix_quality"] += data.get("avg_fix_quality", 0)
-        previous_avg["avg_overall_score"] += data.get("avg_overall_score", 0)
-    
-    # Normalize by count
-    if recent:
-        recent_avg["success_rate"] = round(recent_avg["success_rate"] / len(recent) * 100, 2)
-        recent_avg["findings_per_day"] = round(recent_avg["findings_per_day"] / len(recent), 2)
-        recent_avg["avg_bug_detection"] = round(recent_avg["avg_bug_detection"] / len(recent), 2)
-        recent_avg["avg_fix_quality"] = round(recent_avg["avg_fix_quality"] / len(recent), 2)
-        recent_avg["avg_overall_score"] = round(recent_avg["avg_overall_score"] / len(recent), 2)
-    
-    if previous:
-        previous_avg["success_rate"] = round(previous_avg["success_rate"] / len(previous) * 100, 2)
-        previous_avg["findings_per_day"] = round(previous_avg["findings_per_day"] / len(previous), 2)
-        previous_avg["avg_bug_detection"] = round(previous_avg["avg_bug_detection"] / len(previous), 2)
-        previous_avg["avg_fix_quality"] = round(previous_avg["avg_fix_quality"] / len(previous), 2)
-        previous_avg["avg_overall_score"] = round(previous_avg["avg_overall_score"] / len(previous), 2)
+    previous_correct = sum(daily_data[d].get("correct", 0) for d in previous)
+    previous_partial = sum(daily_data[d].get("partial", 0) for d in previous)
+    previous_incorrect = sum(daily_data[d].get("incorrect", 0) for d in previous)
     
     # Determine trends
-    trends = {}
-    for metric in ["success_rate", "findings_per_day", "avg_bug_detection", "avg_fix_quality", "avg_overall_score"]:
-        if recent_avg[metric] > previous_avg[metric]:
-            trends[metric] = "increasing"
-        elif recent_avg[metric] < previous_avg[metric]:
-            trends[metric] = "decreasing"
-        else:
-            trends[metric] = "stable"
+    correct_trend = "increasing" if recent_correct > previous_correct else "decreasing" if recent_correct < previous_correct else "stable"
+    partial_trend = "increasing" if recent_partial > previous_partial else "decreasing" if recent_partial < previous_partial else "stable"
+    incorrect_trend = "increasing" if recent_incorrect > previous_incorrect else "decreasing" if recent_incorrect < previous_incorrect else "stable"
     
     return {
-        "recent": recent_avg,
-        "previous": previous_avg,
-        "trends": trends,
+        "recent": {
+            "correct": recent_correct,
+            "partial": recent_partial,
+            "incorrect": recent_incorrect,
+            "total": recent_correct + recent_partial + recent_incorrect
+        },
+        "previous": {
+            "correct": previous_correct,
+            "partial": previous_partial,
+            "incorrect": previous_incorrect,
+            "total": previous_correct + previous_partial + previous_incorrect
+        },
+        "trends": {
+            "correct_trend": correct_trend,
+            "partial_trend": partial_trend,
+            "incorrect_trend": incorrect_trend
+        },
         "data_points": len(daily_data)
     }
 
@@ -328,6 +289,9 @@ def generate_dashboard_html(time_series: Dict[str, Any], trends: Dict[str, Any],
         .metric-good {{ color: #4CAF50; font-weight: bold; }}
         .metric-warning {{ color: #FF9800; font-weight: bold; }}
         .metric-bad {{ color: #f44336; font-weight: bold; }}
+        .category-correct {{ color: #4CAF50; font-weight: bold; }}
+        .category-partial {{ color: #FF9800; font-weight: bold; }}
+        .category-incorrect {{ color: #f44336; font-weight: bold; }}
     </style>
 </head>
 <body>
@@ -433,10 +397,10 @@ def generate_daily_table_rows(dates: List[str], daily_data: Dict[str, Any]) -> s
                 <td>{sessions}</td>
                 <td class="{get_metric_class(success_rate, is_percentage=True)}">{success_rate}%</td>
                 <td>{data.get('findings', 0)}</td>
-                <td>{data.get('prs_scored', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_bug_detection', 0))}">{data.get('avg_bug_detection', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_fix_quality', 0))}">{data.get('avg_fix_quality', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_overall_score', 0))}">{data.get('avg_overall_score', 0)}</td>
+                <td>{data.get('prs_categorized', 0)}</td>
+                <td class="category-correct">{data.get('correct', 0)}</td>
+                <td class="category-partial">{data.get('partial', 0)}</td>
+                <td class="category-incorrect">{data.get('incorrect', 0)}</td>
             </tr>
         """)
     
@@ -459,10 +423,10 @@ def generate_weekly_table_rows(weekly_data: Dict[str, Any]) -> str:
                 <td>{sessions}</td>
                 <td class="{get_metric_class(success_rate, is_percentage=True)}">{success_rate}%</td>
                 <td>{data.get('findings', 0)}</td>
-                <td>{data.get('prs_scored', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_bug_detection', 0))}">{data.get('avg_bug_detection', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_fix_quality', 0))}">{data.get('avg_fix_quality', 0)}</td>
-                <td class="{get_metric_class(data.get('avg_overall_score', 0))}">{data.get('avg_overall_score', 0)}</td>
+                <td>{data.get('prs_categorized', 0)}</td>
+                <td class="category-correct">{data.get('correct', 0)}</td>
+                <td class="category-partial">{data.get('partial', 0)}</td>
+                <td class="category-incorrect">{data.get('incorrect', 0)}</td>
             </tr>
         """)
     
