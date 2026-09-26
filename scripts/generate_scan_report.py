@@ -79,12 +79,13 @@ Generated: {timestamp}
 - Trend analysis: TODO
 """
 
-    # Save report
-    with open(f"{report_dir}/scan-report-{timestamp}.md", "w") as f:
+    # Save report (use safe filename without colons)
+    safe_timestamp = timestamp.replace(":", "-").replace(".", "-")
+    with open(f"{report_dir}/scan-report-{safe_timestamp}.md", "w") as f:
         f.write(report)
 
     # Save JSON summary
-    with open(f"{report_dir}/scan-summary-{timestamp}.json", "w") as f:
+    with open(f"{report_dir}/scan-summary-{safe_timestamp}.json", "w") as f:
         json.dump({"summary": summary, "details": results}, f, indent=2)
 
     print(f"[{timestamp}] Scan report generated successfully")

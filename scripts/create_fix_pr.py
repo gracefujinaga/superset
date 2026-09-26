@@ -10,8 +10,9 @@ from pathlib import Path
 
 def create_fix_pr():
     """Create PR with fixes based on scan findings"""
-    timestamp = datetime.now().isoformat()
-    branch_name = f"nightly-scan-fixes-{timestamp.strftime('%Y%m%d')}"
+    now = datetime.now()
+    timestamp = now.isoformat()
+    branch_name = f"nightly-scan-fixes-{now.strftime('%Y%m%d')}"
 
     print(f"[{timestamp}] Creating fix PR...")
 
@@ -37,7 +38,7 @@ def create_fix_pr():
     try:
         subprocess.run(["git", "add", "."], check=True)
         commit_message = f"""
-Nightly Scan Fixes - {timestamp.strftime('%Y-%m-%d')}
+Nightly Scan Fixes - {now.strftime('%Y-%m-%d')}
 
 Automated fixes from nightly security and bug scan:
 
@@ -92,9 +93,10 @@ def apply_fixes(findings):
 
 def create_pr(branch_name, findings):
     """Create PR using GitHub MCP or CLI"""
-    timestamp = datetime.now().isoformat()
+    now = datetime.now()
+    timestamp = now.isoformat()
     
-    pr_title = f"Nightly Scan Fixes - {timestamp.strftime('%Y-%m-%d')}"
+    pr_title = f"Nightly Scan Fixes - {now.strftime('%Y-%m-%d')}"
     pr_body = f"""
 ## Summary
 Automated fixes from nightly security and bug scan.
