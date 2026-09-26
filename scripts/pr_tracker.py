@@ -67,7 +67,7 @@ class PRTracker:
             "fix_quality_score": round(fix_quality_score, 1),
             "overall_score": round(overall_score, 1),
             "scored_at": timestamp,
-            "grade": self._calculate_grade(overall_score)
+            "status": self._calculate_status(overall_score)
         }
         
         # Load scores database
@@ -96,24 +96,20 @@ class PRTracker:
         
         return score_data
     
-    def _calculate_grade(self, score: float) -> str:
-        """Calculate letter grade from score (0-10 scale)"""
-        if score >= 9.0:
-            return "A"
-        elif score >= 8.0:
-            return "B"
-        elif score >= 7.0:
-            return "C"
-        elif score >= 6.0:
-            return "D"
+    def _calculate_status(self, score: float) -> str:
+        """Calculate status from score (0-10 scale)"""
+        if score >= 8.0:
+            return "correct"
+        elif score >= 5.0:
+            return "partial"
         else:
-            return "F"
+            return "incorrect"
     
     def tag_pr_with_score(self, pr_number: int, score_data: Dict[str, Any]) -> bool:
         """Tag the PR with its score using GitHub CLI"""
         try:
             # Create score tag format (0-10 scale)
-            tag_message = f"📊 PR Score: {score_data['overall_score']}/10 (Grade: {score_data['grade']})\n" \
+            tag_message = f"📊 PR Score: {score_data['overall_score']}/10 (Status: {score_data['status']})\n" \
                         f"Bug Detection: {score_data['bug_detection_score']}/10\n" \
                         f"Fix Quality: {score_data['fix_quality_score']}/10"
             
