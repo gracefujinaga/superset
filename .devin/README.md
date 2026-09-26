@@ -21,6 +21,7 @@ Custom skills are available in `.devin/skills/`:
 - **`test-run`** - Run pytest tests with appropriate configurations  
 - **`frontend-dev`** - Start the React/TypeScript development server
 - **`backend-dev`** - Start the Flask backend development server
+- **`github`** - Interact with GitHub repositories through GitHub MCP integration
 
 ### Rules
 
@@ -37,6 +38,7 @@ Invoke skills using the `/` command:
 /test-run         # Run tests
 /frontend-dev     # Start frontend dev server
 /backend-dev      # Start backend dev server
+/github           # Interact with GitHub repositories
 ```
 
 ### Permissions
@@ -78,7 +80,26 @@ This ensures compatibility with other AI coding tools you may use.
 Devin CLI is configured with MCP servers for extended capabilities:
 - **GitHub** - For GitHub API access (configure token in `.devin/mcp_config.local.json`)
 
-To use GitHub integration, add your GitHub token to `.devin/mcp_config.local.json`:
+#### GitHub Integration
+
+The GitHub MCP server enables the AI agent to interact directly with GitHub through natural language:
+
+**Capabilities:**
+- Repository management (create, search, get repo info)
+- File operations (create/update files, push changes, get contents)
+- Issue management (create, list, update issues)
+- Pull request operations (create, review, merge PRs)
+- Code search across repositories
+- Branch and git operations
+
+**Setup:**
+
+1. Create a GitHub Personal Access Token:
+   - Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Generate a new token with `repo` scope (or more specific scopes as needed)
+   - Copy the token
+
+2. Add the token to `.devin/mcp_config.local.json`:
 
 ```json
 {
@@ -91,6 +112,17 @@ To use GitHub integration, add your GitHub token to `.devin/mcp_config.local.jso
   }
 }
 ```
+
+**Usage Examples:**
+- "Create a new issue for the bug in the login form"
+- "Review the latest PR and add comments"
+- "Search for repositories that use React and TypeScript"
+- "Create a new branch and update the README file"
+- "Get the commit history for the main branch"
+
+**Permissions:**
+- All GitHub MCP tools are allowed except `delete_repo`
+- Configure additional restrictions in `.devin/config.json` if needed
 
 ### AGENTS.md
 

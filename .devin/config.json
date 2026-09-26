@@ -16,13 +16,15 @@
       "Exec(poetry)",
       "Exec(make)",
       "Exec(docker)",
-      "Exec(docker-compose)"
+      "Exec(docker-compose)",
+      "mcp__github__*"
     ],
     "deny": [
       "Exec(sudo)",
       "Exec(rm -rf)",
       "Exec(rm)",
-      "Exec(rmdir)"
+      "Exec(rmdir)",
+      "mcp__github__delete_repo"
     ]
   },
   "read_config_from": {
